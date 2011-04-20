@@ -142,7 +142,7 @@ int main( void )
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-	glfwSetWindowTitle("Preferred Renderer");
+	glfwSetWindowTitle("Defren");
 	glewInit();
 	init();
 
