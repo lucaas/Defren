@@ -13,12 +13,13 @@
 #include <iostream>
 
 #include "FBOHandler.h"
+#include "ShaderHandler.h"
 
 static const int WIDTH = 512;
 static const int HEIGHT = 512;
 GLUquadric* quadric;
 FBOHandler fbo;
-
+ShaderHandler shaders;
 
 void renderQuad(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top);
 void switchDrawMode3D(bool threeD);
@@ -26,6 +27,7 @@ void printGLErrors(void);
 
 void init() {
 	fbo.init();
+	shaders.createShaders("normals", "Shaders/gen_normals.vert", "Shaders/gen_normals.frag");
 	glEnable(GL_TEXTURE_2D);
 
 	// Set Up OpenGL
@@ -50,7 +52,7 @@ void draw() {
 	// FIRST PASS, RENDER SCENE
 	switchDrawMode3D(true);
 	glColor3f(1,1,1);
-	
+	shaders.useProgram("normals");
 	for (int i=0; i < 4; i++) {
 		fbo.drawTo(i);
 		glPushMatrix();
@@ -58,11 +60,12 @@ void draw() {
 			gluCylinder(quadric, 1, 0.5f, 1, 36, 36);
 		glPopMatrix();
 	}
-
+	shaders.disable();
 
 	fbo.unbind();
+	
 	gluSphere(quadric, 0.5f, 36,36);
-
+	
 
 	// RENDER QUAD(S)
 	switchDrawMode3D(false);

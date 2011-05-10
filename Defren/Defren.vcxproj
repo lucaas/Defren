@@ -62,9 +62,15 @@
   <ItemGroup>
     <ClCompile Include="FBOHandler.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ShaderHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FBOHandler.h" />
+    <ClInclude Include="ShaderHandler.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\gen_normals.frag" />
+    <None Include="Shaders\gen_normals.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
