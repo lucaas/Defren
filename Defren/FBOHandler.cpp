@@ -1,7 +1,6 @@
 #include "FBOHandler.h"
 #include <iostream>
 
-
 FBOHandler::FBOHandler()
 {
 }
@@ -48,6 +47,14 @@ void FBOHandler::init(GLuint width, GLuint height) {
 		case 1: glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, textures[0], 0);
 	}
 
+
+	// DEPTH RENDERBUFFER
+	GLuint depthbuffer;
+	glGenRenderbuffersEXT(1, &depthbuffer);
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthbuffer);
+	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width, height);
+	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthbuffer);
+
 	// check for errors and unbind
 	if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) != GL_FRAMEBUFFER_COMPLETE_EXT)
 		std::cerr << "ERROR: FBO NOT VALIDATED, ERROR CODE: " << glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) << std::endl;
@@ -63,24 +70,41 @@ void FBOHandler::unbind(void) {
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
-void FBOHandler::drawTo(GLuint num) {
+GLenum FBOHandler::getIdFromNum(GLuint num) {
 
 	if (num >= NUM_TEXTURES) {
 		std::cerr << "WARNING: (FBOHandler) texture outside of range. Tried to bind (write) texture " << num << ", but max is: " << NUM_TEXTURES << std::endl;
-		return; 
+		return 0; 
 	}
 
 	switch (num) {
-		case 0: glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT); break;
-		case 1: glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT); break;
-		case 2: glDrawBuffer(GL_COLOR_ATTACHMENT2_EXT); break;
-		case 3: glDrawBuffer(GL_COLOR_ATTACHMENT3_EXT); break;
-		case 4: glDrawBuffer(GL_COLOR_ATTACHMENT4_EXT); break;
-		case 5: glDrawBuffer(GL_COLOR_ATTACHMENT5_EXT); break;
-		case 6: glDrawBuffer(GL_COLOR_ATTACHMENT6_EXT); break;
-		case 7: glDrawBuffer(GL_COLOR_ATTACHMENT7_EXT); break;
+		case 0: return (GL_COLOR_ATTACHMENT0_EXT); break;
+		case 1: return (GL_COLOR_ATTACHMENT1_EXT); break;
+		case 2: return (GL_COLOR_ATTACHMENT2_EXT); break;
+		case 3: return (GL_COLOR_ATTACHMENT3_EXT); break;
+		case 4: return (GL_COLOR_ATTACHMENT4_EXT); break;
+		case 5: return (GL_COLOR_ATTACHMENT5_EXT); break;
+		case 6: return (GL_COLOR_ATTACHMENT6_EXT); break;
+		case 7: return (GL_COLOR_ATTACHMENT7_EXT); break;
 	}
-	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void FBOHandler::drawTo(GLuint num) {
+	glDrawBuffer(getIdFromNum(num));
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void FBOHandler::drawTo(std::vector<GLuint> v) {
+	int amount = v.size();
+	GLuint* nums = new GLuint [amount];
+
+	for (int i=0; i < amount; i++) {
+		nums[i] = getIdFromNum(v.at(i));
+	}
+	glDrawBuffers(amount, nums);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	delete [] nums;
 }
 
 void FBOHandler::readFrom(GLuint num) {

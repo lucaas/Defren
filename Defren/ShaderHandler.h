@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include "../libs/include/GL/glew.h"
 #include <map>
 
 class ShaderHandler
@@ -9,7 +9,7 @@ class ShaderHandler
 		ShaderHandler(void);
 		~ShaderHandler(void);
 		void createShaders(char* name, char* vertFile, char* fragFile); 
-		void useProgram(char* name);
+		GLint useProgram(char* name);
 
 		inline void disable(void) { glUseProgram(0); }
 

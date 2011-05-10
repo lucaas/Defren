@@ -86,11 +86,17 @@ void ShaderHandler::createShaders(char* name, char* vertFile, char* fragFile) {
 	}
 }
 
-void ShaderHandler::useProgram(char* name) {
+GLint ShaderHandler::useProgram(char* name) {
+	static bool failed = false;
+	if (!failed) {
 	std::map<const char*, GLint>::iterator it = programs.find(name);
 	if (it == programs.end()) {
 		std::cerr << "ERROR: Shader program '" << name << "' does not exist. " << std::endl;
-		return;
+		failed = true;
+		return 0;
 	}
 	glUseProgram(it->second);
+	return it->second;
+	}
+	return 0;
 }
