@@ -7,6 +7,7 @@
 
 #include "../libs/include/GL/glew.h"
 #include "../libs/include/GL/glfw.h"
+#include "../libs/include/glm/glm.hpp"
 
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
@@ -18,15 +19,21 @@
 #include "FBOHandler.h"
 #include "ShaderHandler.h"
 #include "pngtexture/pngtexture.h"
+#include "PointLight.h"
 
-static const int WIDTH = 1024;
-static const int HEIGHT = 1024;
+static const int WIDTH = 1680;
+static const int HEIGHT = 1050;
 GLUquadric* quadric;
 FBOHandler fbo;
 ShaderHandler shaders;
+PointLight* light;
+
 GLuint textureid;
 
-bool toggleShowBuffers = false;
+GLfloat rot_x = 0, rot_z = 0;
+bool mousePressed = false;
+bool toggleShowBuffers = true;
+int zoom = 0;
 
 void renderQuad(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top);
 void switchDrawMode3D(bool threeD);
@@ -35,24 +42,26 @@ void printGLErrors(void);
 void init() {
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.25f,0.25f,0.25f,1);
 
 
-	fbo.init();
+	fbo.init(WIDTH, HEIGHT);
 	shaders.createShaders("normals", "Shaders/gen_normals.vert", "Shaders/gen_normals.frag");
 	shaders.createShaders("lighting", "Shaders/lighting.vert", "Shaders/lighting.frag");
 
 	// Set Up OpenGL
-	gluPerspective(43.6,WIDTH/HEIGHT,0.1,10);
-	gluLookAt(0,2,4,0,0,0,0,1,0);
-	
 	quadric = gluNewQuadric();
 
 	textureid = loadPNG("Scene/texture.png");
+
+	light = new PointLight(1,1,1);
 }
 
 void drawScene() {
 	
 	// Texture mapped cube
+	glPushMatrix();
+	glScalef(2,2,2);
 	glBegin(GL_QUADS);
 		/*
 		// Top Face
@@ -90,17 +99,19 @@ void drawScene() {
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
 		*/
 	glEnd();
-	
+	glPopMatrix();
 	
 	// Rotating cylinder
 	static float angle = 0;
 	angle++;
 
 	glPushMatrix();
+		glColor3f(0.75f, 0.5f, 0.5f);
 		glRotatef(angle, 1, 4, 2);
 		glTranslatef(0,0,-0.5f);
 		glScalef(0.75f, 0.75f, 0.75f);
-		gluCylinder(quadric, 1, 0.5f, 1, 36, 36);
+		//gluCylinder(quadric, 1, 0.5f, 1, 36, 36);
+		gluSphere(quadric, 0.5f, 36,36);
 	glPopMatrix();
 	
 }
@@ -128,9 +139,20 @@ void draw() {
 	v.push_back(2);
 	v.push_back(3);
 	fbo.drawTo(v);
-	
+
+
+
+	glRotatef( rot_x*0.5f, 1.0f, 0.0f, 0.0f );
+	glRotatef( rot_z*0.5f, 0.0f, 0.0f, 1.0f ); 
 	drawScene();
-	
+
+	glPushMatrix();
+		//std::cerr << "lightpos: " << lightpos.x << ", " << lightpos.y << ", " << lightpos.z << std::endl;
+		glTranslatef(1,1,1);
+		//glTranslatef(lightpos.x, lightpos.y, lightpos.z);
+		gluSphere(quadric, 0.2f, 36,36);
+	glPopMatrix();
+	glm::vec3 lightpos = light->getPosition();
 	shaders.disable();
 	
 	fbo.unbind();
@@ -144,18 +166,18 @@ void draw() {
 		glColor3f(1,1,1);
 
 		fbo.readFrom(0);
-		renderQuad(0, 0.5f*WIDTH, 0, 0.5f*HEIGHT);
+		renderQuad(0, 0.25f*WIDTH, 0, 0.25f*HEIGHT);
 
 		fbo.readFrom(1);
-		renderQuad(0, 0.5f*WIDTH, 0.5f*HEIGHT, HEIGHT);
+		renderQuad(0.25f*WIDTH, 0.5f*WIDTH, 0, 0.25f*HEIGHT);
 	
 		fbo.readFrom(2);
-		renderQuad(0.5f*WIDTH, WIDTH, 0, 0.5f*HEIGHT);
+		renderQuad(0.5f*WIDTH, 0.75f*WIDTH, 0, 0.25f*HEIGHT);
 
 		fbo.readFrom(3);
-		renderQuad(0.5f*WIDTH, WIDTH, 0.5f*HEIGHT, HEIGHT);
+		renderQuad(0.75f*WIDTH, WIDTH, 0, 0.25f*HEIGHT);
 	}
-	else {
+	
 		
 		GLint shaderProgram = shaders.useProgram("lighting");
 
@@ -173,16 +195,20 @@ void draw() {
 
 		glActiveTexture(GL_TEXTURE2);
 		fbo.readFrom(2);
-		glUniform1i(glGetUniformLocation(shaderProgram, "tex_depth"), 2);
+		glUniform1i(glGetUniformLocation(shaderProgram, "tex_position"), 2);
 
 		//glActiveTexture(GL_TEXTURE3);
 		//fbo.readFrom(3);
 		//glUniform1i(glGetUniformLocation(shaderProgram, "tex_shininess"), 3);
 
+		// Light rotation
+
+		//glUniform3f(glGetUniformLocation(shaderProgram, "light_position"), -1,-1,-1);
+		glUniform3f(glGetUniformLocation(shaderProgram, "light_position"), 1, 1, 1);
 		renderQuad(0, WIDTH, 0, HEIGHT);
 		shaders.disable();
 
-	}
+	
 	glBindTexture(GL_TEXTURE_2D, 0);	
 	
 
@@ -193,8 +219,8 @@ void switchDrawMode3D(bool threeD) {
 	if (threeD) {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluPerspective(43.6,WIDTH/HEIGHT,0.1,10);
-		gluLookAt(0,2,4,0,0,0,0,1,0);
+		gluPerspective(50 + zoom/10.0f*50,WIDTH/HEIGHT,0.1,10);
+		gluLookAt(0,1,1,0,0,0,0,1,0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -228,6 +254,19 @@ void printGLErrors(void) {
 		std::cerr << "ERROR: FBO NOT VALIDATED, ERROR CODE: " << glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) << std::endl;
 }
 
+void mouseMoved(int x, int y) {
+	if (true) {
+		// std::cerr << "mouse pos: x:" << x << "\t y:" << y << std::endl;
+		static int xpos = 0;
+		static int ypos = 0;
+
+		rot_x += y - ypos;
+		rot_z += x - xpos; 
+
+		xpos = x;
+		ypos = y;
+	}
+}
 
 int main( void )
 {
@@ -240,11 +279,13 @@ int main( void )
 
 
 	// Open an OpenGL window
-	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_WINDOW)) {
+	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_FULLSCREEN)) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 	glfwSetWindowTitle("Defren");
+	 
+	glfwSetMousePosCallback((GLFWmouseposfun) mouseMoved);
 	glewInit();
 	init();
 
@@ -268,6 +309,15 @@ int main( void )
 			spacePress = false;
 			toggleShowBuffers = !toggleShowBuffers;
 		}
+
+		// Mouse press = enable rotate
+		if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT))
+			mousePressed = true;
+		else
+			mousePressed = false;
+
+		// Mouse scroll, zoom
+		zoom = glfwGetMouseWheel();
 	}
 
 

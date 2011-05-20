@@ -44,7 +44,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>F:\Projects\Defren\libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\libs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -65,12 +65,14 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pngtexture\lodepng.cpp" />
     <ClCompile Include="pngtexture\pngtexture.cpp" />
+    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FBOHandler.h" />
     <ClInclude Include="pngtexture\lodepng.h" />
     <ClInclude Include="pngtexture\pngtexture.h" />
+    <ClInclude Include="PointLight.h" />
     <ClInclude Include="ShaderHandler.h" />
   </ItemGroup>
   <ItemGroup>
