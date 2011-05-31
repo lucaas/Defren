@@ -6,7 +6,7 @@ void main(void)
 {
 
 	// 1. Albedo
-	gl_FrontColor = gl_FrontMaterial.diffuse;
+	gl_FrontColor = gl_Color;
 	texCoord = gl_MultiTexCoord0.xy;
 
 	// 2. Normals
@@ -24,5 +24,5 @@ void main(void)
 	// Position
 	gl_Position = ftransform();
 
-	position = vec3(gl_Position.xy*0.5 + 0.5, depth);
+	position = vec3(gl_ModelViewMatrix * gl_Vertex);
 }

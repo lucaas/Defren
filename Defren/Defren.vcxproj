@@ -61,18 +61,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lsg\AnimationNode.cpp" />
     <ClCompile Include="FBOHandler.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="lsg\Node.cpp" />
+    <ClCompile Include="lsg\PlyNode.cpp" />
     <ClCompile Include="pngtexture\lodepng.cpp" />
     <ClCompile Include="pngtexture\pngtexture.cpp" />
     <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="lsg\Scene.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lsg\AnimationNode.h" />
     <ClInclude Include="FBOHandler.h" />
+    <ClInclude Include="lsg\Node.h" />
+    <ClInclude Include="lsg\PlyNode.h" />
     <ClInclude Include="pngtexture\lodepng.h" />
     <ClInclude Include="pngtexture\pngtexture.h" />
     <ClInclude Include="PointLight.h" />
+    <ClInclude Include="lsg\Scene.h" />
     <ClInclude Include="ShaderHandler.h" />
   </ItemGroup>
   <ItemGroup>

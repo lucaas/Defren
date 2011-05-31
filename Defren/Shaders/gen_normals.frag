@@ -3,21 +3,21 @@ varying vec3 normal;
 varying vec2 texCoord;
 varying vec3 position;
 
-uniform sampler2D texture;
+uniform sampler2D tex;
 
 
 void main (void)  
 {  
-	normalize(normal);
-	
+
 	// 1. Albedo (texture diffuse)
-	vec4 texColor = gl_Color * texture2D(texture, texCoord);
+	//gl_FrontColor = gl_Color;
+	vec4 texColor = gl_Color * texture2D(tex, texCoord);
 	
 	// 2. Normals	
-	vec4 normalColor = vec4(normal.xyz * 0.5 + 0.5, 1);
+	vec4 normalColor = vec4(normalize(normal) * 0.5 + 0.5, 1);
 
 	// 3. Position
-	vec4 positionColor = vec4(position, 1);
+	vec4 positionColor = vec4(normalize(position) * 0.5 + 0.5, 1);
 
 	// 4. Shininess?
 	vec4 shininessColor = vec4(0.5);

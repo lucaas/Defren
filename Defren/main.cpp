@@ -20,13 +20,15 @@
 #include "ShaderHandler.h"
 #include "pngtexture/pngtexture.h"
 #include "PointLight.h"
+#include "lsg/Scene.h"
 
-static const int WIDTH = 1680;
-static const int HEIGHT = 1050;
+static const int WIDTH = 800;
+static const int HEIGHT = 600;
 GLUquadric* quadric;
 FBOHandler fbo;
 ShaderHandler shaders;
 PointLight* light;
+Scene *scene;
 
 GLuint textureid;
 
@@ -53,23 +55,24 @@ void init() {
 	quadric = gluNewQuadric();
 
 	textureid = loadPNG("Scene/texture.png");
+	scene = new Scene();
 
 	light = new PointLight(1,1,1);
 }
-
+/*
 void drawScene() {
 	
 	// Texture mapped cube
 	glPushMatrix();
 	glScalef(2,2,2);
 	glBegin(GL_QUADS);
-		/*
+		
 		// Top Face
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);	// Top Right Of The Texture and Quad
-		*/
+		
 				
 		// Back Face
 		glNormal3f(0,0,1); glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Bottom Right Of The Texture and Quad
@@ -91,32 +94,38 @@ void drawScene() {
 		glNormal3f(1,0,0); glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
 		glNormal3f(1,0,0); glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
 		glNormal3f(1,0,0); glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
-		/*
+		
 		// Front Face
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
-		*/
+		
 	glEnd();
 	glPopMatrix();
 	
 	// Rotating cylinder
+	
 	static float angle = 0;
 	angle++;
 
 	glPushMatrix();
 		glColor3f(0.75f, 0.5f, 0.5f);
+		
 		glRotatef(angle, 1, 4, 2);
 		glTranslatef(0,0,-0.5f);
-		glScalef(0.75f, 0.75f, 0.75f);
-		//gluCylinder(quadric, 1, 0.5f, 1, 36, 36);
-		gluSphere(quadric, 0.5f, 36,36);
+		glRotatef(angle,1,0,0);
+
+		//glScalef(5,5,5);
+		glScalef(0.5f,0.5f,0.5f);
+		node->render();
 	glPopMatrix();
+
+
 	
 }
 
-
+*/
 // OpenGL rendering goes here...
 void draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -144,15 +153,18 @@ void draw() {
 
 	glRotatef( rot_x*0.5f, 1.0f, 0.0f, 0.0f );
 	glRotatef( rot_z*0.5f, 0.0f, 0.0f, 1.0f ); 
-	drawScene();
-
+	scene->render();
+	/*
 	glPushMatrix();
 		//std::cerr << "lightpos: " << lightpos.x << ", " << lightpos.y << ", " << lightpos.z << std::endl;
 		glTranslatef(1,1,1);
 		//glTranslatef(lightpos.x, lightpos.y, lightpos.z);
 		gluSphere(quadric, 0.2f, 36,36);
 	glPopMatrix();
+	*/
 	glm::vec3 lightpos = light->getPosition();
+
+
 	shaders.disable();
 	
 	fbo.unbind();
@@ -210,8 +222,8 @@ void draw() {
 
 	
 	glBindTexture(GL_TEXTURE_2D, 0);	
-	
 
+	printGLErrors();
 }
 
 
@@ -220,7 +232,7 @@ void switchDrawMode3D(bool threeD) {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(50 + zoom/10.0f*50,WIDTH/HEIGHT,0.1,10);
-		gluLookAt(0,1,1,0,0,0,0,1,0);
+		gluLookAt(0,5,1,0,0,0,0,1,0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -270,6 +282,7 @@ void mouseMoved(int x, int y) {
 
 int main( void )
 {
+
 	int running = GL_TRUE;
 
 	// Initialize GLFW
@@ -279,10 +292,11 @@ int main( void )
 
 
 	// Open an OpenGL window
-	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_FULLSCREEN)) {
+	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_WINDOW)) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
+	glfwSetWindowPos(300,100);
 	glfwSetWindowTitle("Defren");
 	 
 	glfwSetMousePosCallback((GLFWmouseposfun) mouseMoved);
