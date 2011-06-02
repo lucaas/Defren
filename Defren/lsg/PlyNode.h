@@ -3,7 +3,7 @@
 #include "../../libs/include/GL/glew.h"
 #include "Node.h"
 
-class PlyNode : Node
+class PlyNode : public Node
 {
 public:
 

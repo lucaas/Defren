@@ -4,11 +4,6 @@
 #include <sstream>
 
 
-ShaderHandler::ShaderHandler(void)
-{
-}
-
-
 ShaderHandler::~ShaderHandler(void)
 {
 }
@@ -86,6 +81,10 @@ void ShaderHandler::createShaders(char* name, char* vertFile, char* fragFile) {
 	}
 }
 
+GLint ShaderHandler::getProgram(){
+	return activeProgram;
+}
+
 GLint ShaderHandler::useProgram(char* name) {
 	static bool failed = false;
 	if (!failed) {
@@ -96,6 +95,7 @@ GLint ShaderHandler::useProgram(char* name) {
 		return 0;
 	}
 	glUseProgram(it->second);
+	activeProgram = it->second;
 	return it->second;
 	}
 	return 0;

@@ -3,7 +3,10 @@ uniform sampler2D tex_normal;
 uniform sampler2D tex_position;
 uniform sampler2D tex_shininess;
 
-uniform vec3 light_position;
+uniform vec3 light_pos;
+uniform vec3 light_color;
+uniform float light_radius;
+uniform float light_intensity;
 
 varying vec2 texCoord;
 
@@ -17,22 +20,24 @@ void main(void) {
 	vec3 shininess = texture2D(tex_shininess, texCoord).xyz;
 
 	// Unpack data
-	position = 2.0*position - 1.0;
+	//position = 2.0*position - 1.0;
 	normal = 2.0*normal - 1.0;
 
 	// LIGHTING
-	vec3 vec_light = light_position - position;
+	vec3 vec_light = light_pos - position;
 	float dist = length(vec_light);
-	float intensity = 1.0; //clamp(2.0 - dist*dist, 0.0, 1.0);
+
+	float intensity = light_intensity; //light_intensity / (1.0+light_radius*dist);
+
 	
 	if (intensity > 0.0) {
 		vec3 N = normalize(normal);
-		vec3 L = normalize(vec_light);   
+		vec3 L = normalize(vec_light-position);   
 		vec3 V = normalize(-position); // we are in Eye Coordinates, so EyePos is (0,0,0)
-		vec3 R = normalize(-reflect(L,N));  // PHONG
-
+		vec3 R = normalize(reflect(L,N));  // PHONG
+		//vec3 H = normalize(L+V);
 	   //calculate Ambient Term:  
-	   vec4 Iamb = vec4(0.1*albedo,1.0);
+	   vec4 Iamb = vec4(0); //vec4(0.2*albedo,1.0);
 
 	   //calculate Diffuse Term:  
 	   vec4 Idiff = vec4(albedo * max(dot(N,L), 0.0), 1.0);
@@ -42,14 +47,14 @@ void main(void) {
 	   //vec4 Ispec = vec4(0);
 	   //vec4 Ispec = vec4(shininess * pow(max(dot(R,V),0.0),0.3*10.0), 1.0);
 
-	   float materialShininess = 10.0;
+	   float materialShininess = 100.0;
 	   float specular = pow( max(dot(R, V), 0.0), materialShininess );
 	   vec4 Ispec = specular * vec4(shininess, 1);
     
 	   // write Total Color:  
-	   vec4 lightColor = Iamb + Idiff + Ispec;
+	   vec4 objectColor = Iamb + Idiff + Ispec;
 
-		gl_FragColor = intensity * lightColor;
+		gl_FragColor = intensity * vec4(light_color, 1.0) * objectColor;
 	}
 	else {
 		gl_FragColor = vec4(0.0);

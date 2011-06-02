@@ -19,15 +19,15 @@
 #include "FBOHandler.h"
 #include "ShaderHandler.h"
 #include "pngtexture/pngtexture.h"
-#include "PointLight.h"
 #include "lsg/Scene.h"
+#include "lsg/Camera.h"
+
 
 static const int WIDTH = 800;
 static const int HEIGHT = 600;
 GLUquadric* quadric;
 FBOHandler fbo;
-ShaderHandler shaders;
-PointLight* light;
+ShaderHandler *shaders;
 Scene *scene;
 
 GLuint textureid;
@@ -44,20 +44,19 @@ void printGLErrors(void);
 void init() {
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.25f,0.25f,0.25f,1);
+	glClearColor(0,0,0,1);
 
 
 	fbo.init(WIDTH, HEIGHT);
-	shaders.createShaders("normals", "Shaders/gen_normals.vert", "Shaders/gen_normals.frag");
-	shaders.createShaders("lighting", "Shaders/lighting.vert", "Shaders/lighting.frag");
+	shaders = ShaderHandler::getHandler();
+	shaders->createShaders("normals", "Shaders/gen_normals.vert", "Shaders/gen_normals.frag");
+	shaders->createShaders("lighting", "Shaders/lighting.vert", "Shaders/lighting.frag");
 
 	// Set Up OpenGL
 	quadric = gluNewQuadric();
 
 	textureid = loadPNG("Scene/texture.png");
 	scene = new Scene();
-
-	light = new PointLight(1,1,1);
 }
 /*
 void drawScene() {
@@ -138,7 +137,7 @@ void draw() {
 	glColor3f(1,1,1);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureid);
-	GLint program = shaders.useProgram("normals");
+	GLint program = shaders->useProgram("normals");
 	glUniform1i(glGetUniformLocation(program, "texture"), 0); 
 	
 	// MRT test	
@@ -151,21 +150,12 @@ void draw() {
 
 
 
-	glRotatef( rot_x*0.5f, 1.0f, 0.0f, 0.0f );
-	glRotatef( rot_z*0.5f, 0.0f, 0.0f, 1.0f ); 
+	//glRotatef( rot_x*0.5f, 1.0f, 0.0f, 0.0f );
+	//glRotatef( rot_z*0.5f, 0.0f, 0.0f, 1.0f ); 
 	scene->render();
-	/*
-	glPushMatrix();
-		//std::cerr << "lightpos: " << lightpos.x << ", " << lightpos.y << ", " << lightpos.z << std::endl;
-		glTranslatef(1,1,1);
-		//glTranslatef(lightpos.x, lightpos.y, lightpos.z);
-		gluSphere(quadric, 0.2f, 36,36);
-	glPopMatrix();
-	*/
-	glm::vec3 lightpos = light->getPosition();
 
 
-	shaders.disable();
+	shaders->disable();
 	
 	fbo.unbind();
 	
@@ -190,35 +180,48 @@ void draw() {
 		renderQuad(0.75f*WIDTH, WIDTH, 0, 0.25f*HEIGHT);
 	}
 	
-		
-		GLint shaderProgram = shaders.useProgram("lighting");
 
-		glActiveTexture(GL_TEXTURE0);
-		fbo.readFrom(0);
-		glUniform1i(glGetUniformLocation(shaderProgram, "tex_albedo"), 0);
 
-		glActiveTexture(GL_TEXTURE1);
-		fbo.readFrom(1);
-		GLint uniformLocation = glGetUniformLocation(shaderProgram, "tex_normal");
-		if (uniformLocation == -1) {
-			std::cerr << "ERROR: Failed to locate uniform variable" << std::endl;
-		}
-		glUniform1i(uniformLocation, 1);
 
-		glActiveTexture(GL_TEXTURE2);
-		fbo.readFrom(2);
-		glUniform1i(glGetUniformLocation(shaderProgram, "tex_position"), 2);
+	GLint shaderProgram = shaders->useProgram("lighting");
 
-		//glActiveTexture(GL_TEXTURE3);
-		//fbo.readFrom(3);
-		//glUniform1i(glGetUniformLocation(shaderProgram, "tex_shininess"), 3);
+	glActiveTexture(GL_TEXTURE0);
+	fbo.readFrom(0);
+	glUniform1i(glGetUniformLocation(shaderProgram, "tex_albedo"), 0);
 
-		// Light rotation
+	glActiveTexture(GL_TEXTURE1);
+	fbo.readFrom(1);
+	GLint uniformLocation = glGetUniformLocation(shaderProgram, "tex_normal");
+	if (uniformLocation == -1) {
+		std::cerr << "ERROR: Failed to locate uniform variable" << std::endl;
+	}
+	glUniform1i(uniformLocation, 1);
 
-		//glUniform3f(glGetUniformLocation(shaderProgram, "light_position"), -1,-1,-1);
-		glUniform3f(glGetUniformLocation(shaderProgram, "light_position"), 1, 1, 1);
+	glActiveTexture(GL_TEXTURE2);
+	fbo.readFrom(2);
+	glUniform1i(glGetUniformLocation(shaderProgram, "tex_position"), 2);
+
+	//glActiveTexture(GL_TEXTURE3);
+	//fbo.readFrom(3);
+	//glUniform1i(glGetUniformLocation(shaderProgram, "tex_shininess"), 3);
+
+
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_ONE, GL_ONE);
+	
+	std::vector<PointLight>::iterator it = scene->lights.begin();
+	std::vector<PointLight>::iterator end = scene->lights.end();
+	while (it != end) {
+		(*it).useLight();
 		renderQuad(0, WIDTH, 0, HEIGHT);
-		shaders.disable();
+		++it;
+	}
+
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	shaders->disable();
 
 	
 	glBindTexture(GL_TEXTURE_2D, 0);	
@@ -229,13 +232,7 @@ void draw() {
 
 void switchDrawMode3D(bool threeD) {
 	if (threeD) {
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(50 + zoom/10.0f*50,WIDTH/HEIGHT,0.1,10);
-		gluLookAt(0,5,1,0,0,0,0,1,0);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		Camera::getCamera()->applyTransform();
 	}
 	else {
 		glMatrixMode(GL_PROJECTION);
@@ -323,6 +320,15 @@ int main( void )
 			spacePress = false;
 			toggleShowBuffers = !toggleShowBuffers;
 		}
+
+		if (glfwGetKey('A') == GLFW_PRESS)
+			Camera::getCamera()->move(-0.25f, 0, 0);
+		if (glfwGetKey('D') == GLFW_PRESS)
+			Camera::getCamera()->move(0.25f, 0, 0);
+		if (glfwGetKey('W') == GLFW_PRESS)
+			Camera::getCamera()->move(0.0f, 0, -0.25f);
+		if (glfwGetKey('S') == GLFW_PRESS)
+			Camera::getCamera()->move(0.0f, 0, 0.25f);
 
 		// Mouse press = enable rotate
 		if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT))

@@ -9,7 +9,7 @@ PlyNode::PlyNode(char* filename)
 	vertex_count = 0;
 	face_count = 0;
 	parse(filename);
-	setColor(0.75f,0.75f,0.75f);
+	setColor(0.9f,0.9f,0.9f);
 }
 
 
@@ -21,7 +21,7 @@ PlyNode::~PlyNode(void)
 void PlyNode::parse(char *filename) {
   std::string line;
   std::ifstream file(filename);
-  
+  std::cerr << ">>> Loading PLY object." << std::endl; 
   if (file.is_open()) {
 
 
@@ -54,9 +54,6 @@ void PlyNode::parse(char *filename) {
 
 			// read face_count lines
 			for (int i=0; i < face_count; i++) {
-				if (face_count - 100 == i)
-					std::cerr << " hello? " << std::endl;
-
 				Triangle t;
 				int poly_type;
 				file >> poly_type >> t.v0 >> t.v1 >> t.v2;
@@ -69,6 +66,7 @@ void PlyNode::parse(char *filename) {
 
 	}
     file.close();
+	std::cerr << ">>> Finished reading object." << std::endl; 
   }
 }
 
