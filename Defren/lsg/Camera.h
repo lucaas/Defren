@@ -7,6 +7,8 @@ private:
 	glm::vec3 position;
 	glm::vec3 center;
 	glm::vec3 up;
+	glm::vec3 forward;
+	glm::vec3 right;
 	glm::mat4 matrix;
 
 	
@@ -14,9 +16,16 @@ private:
 	~Camera(void);
 
 public:
-	void move(float x, float y, float z);
-	void rotate(float x, float y, float z);
+	enum DIRECTION
+    {
+        FORWARD = 0,
+        RIGHT,
+		BACK,
+		LEFT
+    };
 
+	void Camera::move(DIRECTION dir);
+	void rotate(float x, float y);
 	void applyTransform();
 	glm::vec4 applyTransformTo(glm::vec3 vec);
 

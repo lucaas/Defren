@@ -67,11 +67,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="lsg\Node.cpp" />
     <ClCompile Include="lsg\PlyNode.cpp" />
+    <ClCompile Include="lsg\PlaneNode.cpp" />
     <ClCompile Include="pngtexture\lodepng.cpp" />
     <ClCompile Include="pngtexture\pngtexture.cpp" />
     <ClCompile Include="lsg\PointLight.cpp" />
     <ClCompile Include="lsg\Scene.cpp" />
+    <ClCompile Include="lsg\RotationNode.cpp" />
+    <ClCompile Include="lsg\ScaleNode.cpp" />
+    <ClCompile Include="lsg\SceneBuilder.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
+    <ClCompile Include="lsg\TranslationNode.cpp" />
+    <ClCompile Include="lsg\TransformationStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lsg\Camera.h" />
@@ -79,15 +85,22 @@
     <ClInclude Include="FBOHandler.h" />
     <ClInclude Include="lsg\Node.h" />
     <ClInclude Include="lsg\PlyNode.h" />
+    <ClInclude Include="lsg\PlaneNode.h" />
     <ClInclude Include="pngtexture\lodepng.h" />
     <ClInclude Include="pngtexture\pngtexture.h" />
     <ClInclude Include="lsg\PointLight.h" />
     <ClInclude Include="lsg\Scene.h" />
+    <ClInclude Include="lsg\RotationNode.h" />
+    <ClInclude Include="lsg\ScaleNode.h" />
+    <ClInclude Include="lsg\SceneBuilder.h" />
     <ClInclude Include="ShaderHandler.h" />
+    <ClInclude Include="lsg\TranslationNode.h" />
+    <ClInclude Include="lsg\TransformationStack.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\gen_normals.frag" />
-    <None Include="Shaders\gen_normals.vert" />
+    <None Include="Scene\scene.xml" />
+    <None Include="Shaders\generate.frag" />
+    <None Include="Shaders\generate.vert" />
     <None Include="Shaders\lighting.frag" />
     <None Include="Shaders\lighting.vert" />
   </ItemGroup>

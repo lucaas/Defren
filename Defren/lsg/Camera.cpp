@@ -4,10 +4,12 @@
 
 #include "../../libs/include/GL/glew.h"
 #include "../../libs/include/glm/gtc/matrix_transform.hpp"
+#include "../../libs/include/glm/gtc/type_ptr.hpp"
+#include "../ShaderHandler.h"
 
 Camera::Camera(void)
 {
-	position = glm::vec3(0.0f, 5.0f, 10.0f);
+	position = glm::vec3(0.0f, 2.0f, 10.0f);
 	center = glm::vec3(0.0f, 0.0f, 0.0f);
 	up = glm::vec3(0.0f, 1.0f, 0.0f);
 	matrix = glm::mat4();
@@ -21,31 +23,92 @@ void Camera::applyTransform() {
 	glTranslatef(-rotation.x, -rotation.y, -rotation.z); // translate
 	*/
 	//std::cerr << "using camera: (" << position.x << ", " << position.y << ", " << position.z << ")\t color: (" << center.r << ", " << center.g << ", " << center.b << ")\t up: (" << up.r << ", " << up.g << ", " << up.b << ")" << std::endl;
-	glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(53.0f, 1.f, 1.0f, 50.f);
-		gluLookAt(position.x, position.y, position.z, position.x, position.y-5.0f, position.z-10.0f, up.x, up.y, up.z);
-		matrix = glm::lookAt(position, position-glm::vec3(0.0f,1.0f,5.0f), up);
 
-	glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+	glm::mat4 projection_matrix = glm::perspective(45.0f,800.0f/600.0f,1.0f,50.0f);
+	matrix = glm::lookAt(position, center, up);
+
 	//std::cerr << "mat[0]: " << matrix[1][1] << std::endl;
 
+	// Bind the "view_matrix" variable in our C++ program to the "view_matrix" variable in the shader
+	GLuint uniformLocation = glGetUniformLocation(ShaderHandler::getHandler()->getProgram(), "view_matrix");
+	if (uniformLocation == -1) {
+		std::cerr << "ERROR: Failed to locate uniform variable: view_matrix" << std::endl;
+	}
+	glUniformMatrix4fv(uniformLocation, 1, false, glm::value_ptr(matrix));
+
+	uniformLocation = glGetUniformLocation(ShaderHandler::getHandler()->getProgram(), "projection_matrix");
+	if (uniformLocation == -1) {
+		std::cerr << "ERROR: Failed to locate uniform variable: view_matrix" << std::endl;
+	}
+	glUniformMatrix4fv(uniformLocation, 1, false, glm::value_ptr(projection_matrix));
+	
 
 }
 
 
 glm::vec4 Camera::applyTransformTo(glm::vec3 vec) {
-	return matrix * glm::vec4(vec, 1.0f);
+	glm::vec4 result = matrix * glm::vec4(vec, 1.0f);
+	return result;
 }
 
-void Camera::move(float x, float y, float z) {
-	position.x += x;
-	position.y += y;
-	position.z += z;
+void Camera::move(DIRECTION dir) {
+	switch (dir) {
+	case FORWARD:
+		position += 0.1f * forward;
+		break;
+	case BACK:
+		position -= 0.1f * forward;
+		break;
+	case RIGHT:
+		position += 0.1f * glm::cross(forward, up);
+		break;
+	case LEFT:
+		position -= 0.1f * glm::cross(forward, up);
+		break;
+	}
 }
 
 
 Camera::~Camera(void)
 {
 }
+
+
+glm::vec3 sphericalToCartesian(float theta, float phi) {
+	float x = cos(theta) * sin(phi);
+	float y = sin(theta);
+	float z = cos(theta) * cos(phi);
+	return glm::vec3(x,y,z);
+}
+
+glm::vec3 rotateArbitraryAxis(glm::vec3 v, glm::vec3 u, float theta) {
+    glm::vec3 result;
+
+	glm::normalize(u);
+
+    double scalar = glm::dot(v, u);
+    double c = cos(theta);
+    double s = sin(theta);
+    double a = 1.0f - c;
+
+    result.x = u.x * scalar * a + (v.x * c) + ((-u.z * v.y) + (u.y * v.z)) * s;
+    result.y = u.y * scalar * a + (v.y * c) + (( u.z * v.x) - (u.x * v.z)) * s;
+    result.z = u.z * scalar * a + (v.z * c) + ((-u.y * v.x) + (u.x * v.y)) * s;
+
+    return result;
+}
+void Camera::rotate(float x, float y) {
+		static const float PI = 3.14159265f;
+		static float yaw = 0;
+		static float pitch = 0;
+		yaw += (x > 0) ? 0.5f*x*x : -0.5f*x*x;
+		pitch += (y > 0) ? 0.5f*y*y : -0.5f*y*y;
+
+		right = glm::vec3(cos(yaw),0.0f, sin(yaw));
+		forward = glm::cross(glm::vec3(0.0f,1.0f,0.0f), right);
+		
+		forward = rotateArbitraryAxis(forward, right, pitch);
+		up = glm::cross(forward, right);
+		center = position + forward;
+}
+

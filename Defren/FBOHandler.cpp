@@ -31,7 +31,7 @@ void FBOHandler::init(GLuint width, GLuint height) {
 	// textures
 	for (int i = 0; i < NUM_TEXTURES; i++) {
 		glBindTexture(GL_TEXTURE_2D, textures[i]);
-  		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+  		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
   		glGenerateMipmapEXT(GL_TEXTURE_2D);
 	}
 

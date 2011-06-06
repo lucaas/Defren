@@ -4,10 +4,12 @@
 #pragma comment( lib, "GLFW" )
 #pragma comment( lib, "opengl32" )
 #pragma comment( lib, "glu32" )
+#pragma comment( lib, "pugixml_d.lib" )
 
 #include "../libs/include/GL/glew.h"
 #include "../libs/include/GL/glfw.h"
 #include "../libs/include/glm/glm.hpp"
+
 
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
@@ -21,6 +23,7 @@
 #include "pngtexture/pngtexture.h"
 #include "lsg/Scene.h"
 #include "lsg/Camera.h"
+#include "lsg/SceneBuilder.h"
 
 
 static const int WIDTH = 800;
@@ -32,7 +35,9 @@ Scene *scene;
 
 GLuint textureid;
 
-GLfloat rot_x = 0, rot_z = 0;
+static float lasty = 0;
+static float lastx = 0;
+
 bool mousePressed = false;
 bool toggleShowBuffers = true;
 int zoom = 0;
@@ -44,18 +49,20 @@ void printGLErrors(void);
 void init() {
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0,0,0,1);
+	glClearColor(0.1f,0.1f,0.15f,1);
 
 
 	fbo.init(WIDTH, HEIGHT);
 	shaders = ShaderHandler::getHandler();
-	shaders->createShaders("normals", "Shaders/gen_normals.vert", "Shaders/gen_normals.frag");
+	shaders->createShaders("generate", "Shaders/generate.vert", "Shaders/generate.frag");
 	shaders->createShaders("lighting", "Shaders/lighting.vert", "Shaders/lighting.frag");
 
 	// Set Up OpenGL
 	quadric = gluNewQuadric();
 
 	textureid = loadPNG("Scene/texture.png");
+	//SceneBuilder builder = SceneBuilder("Scene/scene.xml");
+	//scene = builder.getScene();
 	scene = new Scene();
 }
 /*
@@ -133,13 +140,14 @@ void draw() {
 
 	
 	// FIRST PASS, RENDER SCENE
-	switchDrawMode3D(true);
+
 	glColor3f(1,1,1);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureid);
-	GLint program = shaders->useProgram("normals");
+	GLint program = shaders->useProgram("generate");
 	glUniform1i(glGetUniformLocation(program, "texture"), 0); 
-	
+	switchDrawMode3D(true);
+
 	// MRT test	
 	std::vector<GLuint> v;
 	v.push_back(0);
@@ -168,18 +176,18 @@ void draw() {
 		glColor3f(1,1,1);
 
 		fbo.readFrom(0);
-		renderQuad(0, 0.25f*WIDTH, 0, 0.25f*HEIGHT);
+		renderQuad(0, 0.5f*WIDTH, 0, 0.5f*HEIGHT);
 
 		fbo.readFrom(1);
-		renderQuad(0.25f*WIDTH, 0.5f*WIDTH, 0, 0.25f*HEIGHT);
+		renderQuad(0.5f*WIDTH, WIDTH, 0, 0.5f*HEIGHT);
 	
 		fbo.readFrom(2);
-		renderQuad(0.5f*WIDTH, 0.75f*WIDTH, 0, 0.25f*HEIGHT);
+		renderQuad(0.0f*WIDTH, 0.5f*WIDTH, 0.5f*HEIGHT, HEIGHT);
 
 		fbo.readFrom(3);
-		renderQuad(0.75f*WIDTH, WIDTH, 0, 0.25f*HEIGHT);
+		renderQuad(0.5f*WIDTH, WIDTH, 0.5f*HEIGHT, HEIGHT);
 	}
-	
+	else {
 
 
 
@@ -193,7 +201,7 @@ void draw() {
 	fbo.readFrom(1);
 	GLint uniformLocation = glGetUniformLocation(shaderProgram, "tex_normal");
 	if (uniformLocation == -1) {
-		std::cerr << "ERROR: Failed to locate uniform variable" << std::endl;
+		std::cerr << "ERROR: Failed to locate uniform variable: tex_normal" << std::endl;
 	}
 	glUniform1i(uniformLocation, 1);
 
@@ -218,10 +226,16 @@ void draw() {
 		++it;
 	}
 
+	
+
+	shaders->disable();
+	
+
 
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	shaders->disable();
+	
+	}
 
 	
 	glBindTexture(GL_TEXTURE_2D, 0);	
@@ -233,6 +247,16 @@ void draw() {
 void switchDrawMode3D(bool threeD) {
 	if (threeD) {
 		Camera::getCamera()->applyTransform();
+		/*
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(53.0f, 1.f, 1.0f, 50.f);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		static float anim=-1;
+		anim += 0.01f;
+		gluLookAt(anim,1,5,anim,0,0,0,1,0);
+		*/
 	}
 	else {
 		glMatrixMode(GL_PROJECTION);
@@ -264,16 +288,10 @@ void printGLErrors(void) {
 }
 
 void mouseMoved(int x, int y) {
+
 	if (true) {
-		// std::cerr << "mouse pos: x:" << x << "\t y:" << y << std::endl;
-		static int xpos = 0;
-		static int ypos = 0;
-
-		rot_x += y - ypos;
-		rot_z += x - xpos; 
-
-		xpos = x;
-		ypos = y;
+		lasty = (y-HEIGHT/2.0f)/HEIGHT;
+		lastx = (x-WIDTH/2.0f)/WIDTH;
 	}
 }
 
@@ -289,7 +307,7 @@ int main( void )
 
 
 	// Open an OpenGL window
-	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_WINDOW)) {
+	if(!glfwOpenWindow(WIDTH, HEIGHT, 8, 8, 8, 8, 8, 0, GLFW_FULLSCREEN)) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
@@ -322,13 +340,13 @@ int main( void )
 		}
 
 		if (glfwGetKey('A') == GLFW_PRESS)
-			Camera::getCamera()->move(-0.25f, 0, 0);
+			Camera::getCamera()->move(Camera::LEFT);
 		if (glfwGetKey('D') == GLFW_PRESS)
-			Camera::getCamera()->move(0.25f, 0, 0);
+			Camera::getCamera()->move(Camera::RIGHT);
 		if (glfwGetKey('W') == GLFW_PRESS)
-			Camera::getCamera()->move(0.0f, 0, -0.25f);
+			Camera::getCamera()->move(Camera::FORWARD);
 		if (glfwGetKey('S') == GLFW_PRESS)
-			Camera::getCamera()->move(0.0f, 0, 0.25f);
+			Camera::getCamera()->move(Camera::BACK);
 
 		// Mouse press = enable rotate
 		if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT))
@@ -337,7 +355,7 @@ int main( void )
 			mousePressed = false;
 
 		// Mouse scroll, zoom
-		zoom = glfwGetMouseWheel();
+		zoom = glfwGetMouseWheel();		Camera::getCamera()->rotate(lastx, lasty);
 	}
 
 

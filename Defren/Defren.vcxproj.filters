@@ -52,6 +52,24 @@
     <ClCompile Include="lsg\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lsg\TranslationNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lsg\RotationNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lsg\PlaneNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lsg\TransformationStack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lsg\ScaleNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lsg\SceneBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FBOHandler.h">
@@ -84,19 +102,38 @@
     <ClInclude Include="lsg\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lsg\TranslationNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lsg\RotationNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lsg\PlaneNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lsg\TransformationStack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lsg\ScaleNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lsg\SceneBuilder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\gen_normals.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\gen_normals.frag">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\lighting.vert">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\lighting.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\generate.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\generate.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Scene\scene.xml" />
   </ItemGroup>
 </Project>

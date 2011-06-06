@@ -15,7 +15,10 @@ public:
 	PointLight(glm::vec3 pos);
 	void setColor(float r, float g, float b);
 	void setColor(glm::vec3 vec);
+	void setPosition(glm::vec3 vec);
+	void setIntensity(float intensity);
 	~PointLight(void);
 	void useLight();
+	void drawLight();
 };
 

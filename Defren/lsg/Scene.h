@@ -11,9 +11,10 @@ public:
 	~Scene(void);
 	void render(void);
 	std::vector<PointLight> lights;
+	void defaultScene();
+	Node *root;
 
 private:
-	Node *root;
 	Camera *camera;
 
 };
